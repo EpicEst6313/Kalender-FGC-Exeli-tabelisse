@@ -1,0 +1,22 @@
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Secrets and credentials
+credentials.json
+token.json
+client_secret*.json
+service-account*.json
+.env
+.env.*
+
+# Local configuration
+config/
+secrets/
+
+# OS files
+.DS_Store
+Thumbs.db
