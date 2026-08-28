@@ -24,6 +24,10 @@ SCOPES = [
     "https://www.googleapis.com/auth/calendar.readonly"
 ]
 
+# Ids for calendars
+calendar_ids = []
+events = []
+
 
 def login():
     """
@@ -33,6 +37,7 @@ def login():
     credentials = flow.run_local_server() # Starting the local OAuth server and opening the authorization flow
     TOKEN_FILE.write_text(credentials.to_json()) # Saving the credentials as JSON so we can reuse them next time
     return credentials
+
 
 def authorization_controll():
     """
@@ -61,3 +66,56 @@ def authorization_controll():
     # If no token is found, letting user login
     else:
         return login()
+
+def main():
+    #code wide varribles
+    global calendar_ids, events
+
+    # Making sure that program has access
+    credentials = authorization_controll()
+    service = build (
+        "calendar",
+        "v3",
+        credentials=credentials
+    )
+
+    # Asking user as long as teher is calendar name that matches
+    while True:
+
+        # Asking user which calenders are wanted to use by this program split in teh end splits it 
+        summary = input("Kalendri nimed millest soovid, et info pannakse Exeli tabelisse(eralda komaga): ").split(",")
+
+        # Asking all the calendars to make calendar summary to id
+        response = service.calendarList().list().execute() # Creates request object and execute gives the response directly to varible
+
+        print("Kasutan nende kalendrite infot:")
+
+        # Taking the response list of dictonarys item dictonary open and comparing summary names to user names for accurate id to request later
+        for calendar in response["items"]:
+            for name in summary:
+                if calendar.get("summary").lower() == name.lower().strip():
+                    print(calendar.get("summary"))
+                    calendar_ids.append(calendar.get("id"))
+        
+        if (calendar_ids):
+            break
+        
+    # Getting only the right calendar and it's events
+    for calendar_id in calendar_ids:
+        events.append(service.events().list(calendarId = calendar_id).execute())
+    
+    # Printing out beautifully
+    print("Kuupaev".ljust(20), "Algus".ljust(10), "Lopp".ljust(10), "sundmus".ljust(30), "Kalender")
+
+    # printing all events out seperetly
+    for calendar_events in events:
+        for event in calendar_events["items"]:
+            prinditav_sona = "".ljust(20) + event["start"].get("dateTime").ljust(10) + event["end"].get("dateTime").ljust(10) + event.get("summary").ljust(30)
+            print(
+                event.get("summary"), # what event
+                event.get("start"), # when starts
+                event.get("end") # when ends
+            )
+
+
+main()
